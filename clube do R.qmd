@@ -1,0 +1,211 @@
+---
+format:
+    revealjs:
+        theme: moon
+lang: pt
+title: Clube do R
+subtitle: Manipulação de um Banco de Dados
+author: Nielson Alexandre de Almeida Dantas Junior
+date: today
+date-format: long
+callout-icon: false
+logo: includes/logo.png
+echo: true
+self-contained-math: true
+embed-resources: true
+cache: true
+---
+
+## Carregando os pacotes
+
+Para iniciar, carregaremos os pacotes que iremos utilizar nessa aula. Lembrem-se de instalar-los dentro do R utilizando `install.packages()`. 
+
+```{r}
+
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+
+```
+
+
+
+## Criando o Banco de Dados Manualmente
+
+```{r}
+data.frame(
+  estado = c('Maranhão', 'Piau', 'Ceará', 
+             'Rio Grande do Norte', 'Paraíba', 'Pernambuco',
+             'Alagoas', 'Sergipe', 'Bahia'),
+  casos = c(3198, 914, 4562, 1720, 1623, 6976, 1189, 1175, 5446)
+) |> write.csv("tuberculose.csv", row.names = FALSE)
+
+```
+
+
+
+
+## Carregando o Banco de Dados
+
+```{r}
+
+tuberculose <- read_csv("tuberculose.csv", show_col_types = FALSE)
+
+```
+
+
+## Construindo uma tabela 
+
+```{r}
+#| output-location: slide
+
+kable(tuberculose, 
+      longtable = T ,
+      caption = "Número de Casos de Tuberculose Notificados nas
+      Unidades de Federação da Região Nordeste do Brasil em 2022",
+      booktabs = T, align = c("c", "c"), 
+      col.names = c('Unidade de Federação', 'Número de Casos' )) |>
+  kable_styling(font_size = 28)
+
+```
+
+
+## Construindo um Gráfico de Colunas Simples
+
+```{r}
+#| output-location: slide
+#| fig-align: center
+#| fig-cap: Número de Casos de Tuberculose Notificados nas Unidades de Federação da Região Nordeste do Brasil em 2022.
+
+
+ggplot(tuberculose, aes(x = estado, y = casos)) + 
+  geom_col(fill = "lightblue", colour = "black") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  ylim(0, 8000) + ylab("") + xlab("") 
+
+```
+
+## Banco de Dados Iris {.smaller}
+
+Nesse segundo exemplos, iremos aprender a manipular um banco de dados já pronto. Utilizaremos o Banco denominado Iris, mas antes vamos começar explicar um pouco sobre o banco.
+
+Para começar, o Banco de Dados Iris é composto por três espécies da Flor Íris, na qual, foram coletadas 150 amostras. As variáveis compostas no Iris são: Comprimento da sépala, Largura da sépala, Comprimento da pétala, Largura da pétala. 
+
+Como a amostra é de 150, a tabela ficaria muito grande. Então, selecionaremos uma segunda amostra dentro da amostra de 150. Em outra, palavras.
+
+## Selecionando uma segunda amostra
+
+```{r}
+
+iris1 <- iris[iris$Sepal.Width >= 3.8,]
+
+```
+
+\newline
+
+Logo, pegamos uma amostra de 6 Flores que possuem a `Largura da Sépala` maior ou igual do que 3.8.
+
+## Manipulando o Banco de Dados iris1
+
+```{r}
+
+iris2 <- iris1 |> 
+    as_tibble() |>
+    rename(
+        `Comprimento da sépala` = Sepal.Length,
+        `Largura da sépala` = Sepal.Width,
+        `Comprimento da pétala` = Petal.Length,
+        `Largura da pétala` = Petal.Width,
+        `Espécie` = Species
+    ) |> 
+    group_by(Espécie) |> gather("Variável", "cm", -Espécie)
+
+```
+
+## Construindo uma Tabela
+
+```{r}
+#| output-location: slide
+
+kable(iris2, longtable = T, 
+      caption = "Propriedades das três espécies da Flor Íris para 12 amostras", 
+      booktabs = T, 
+      align = c("c", "c", "c")) |> 
+      kable_styling(font_size = 23)
+
+```
+
+## Construindo um Gráfico de Colunas Múltiplas
+
+
+```{r}
+#| output-location: slide
+#| fig-align: center
+#| fig-cap: Propriedades das três espécies da Flor Íris para 12 amostras.
+
+iris2 |> ggplot(aes(Espécie, cm, fill = Variável)) + 
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(x = "", y = "", fill = "Variáveis") + 
+  theme_bw()
+
+
+```
+
+
+## Manipulando pela 2° Vez
+
+Agora iremos utilizar a média de cada propriedade das 150 flores Iris, para isso utilizaremos a função `summarise` do pacote `dplyr`. 
+
+```{r}
+
+iris3 <- iris |> 
+    as_tibble() |>
+    rename(
+        `Comprimento da sépala` = Sepal.Length,
+        `Largura da sépala` = Sepal.Width,
+        `Comprimento da pétala` = Petal.Length,
+        `Largura da pétala` = Petal.Width,
+        `Espécie` = Species
+    ) |> 
+    group_by(Espécie) |> 
+    summarise(across(
+        1:4,mean)) |> gather("Variável", "Média", -Espécie)
+
+```
+
+## Construindo a Tabela a partir do `iris4` 
+
+```{r}
+#| output-location: slide
+
+kable(iris3, longtable = T, 
+      caption = "Propriedades das três espécies da Flor Íris para 150 amostras.", 
+      booktabs = T, 
+      col.names = c("Espécie", "Variável", "Média"), 
+      align = c("c", "c", "c")) |>
+  kable_styling(font_size = 23)
+
+
+```
+
+## Construindo um Gráfico de Colunas Múltiplas
+
+```{r}
+#| output-location: slide
+#| fig-align: center
+#| fig-cap: Propriedades das três espécies da Flor Íris para 12 amostras.
+
+iris3 |>  ggplot(aes(Espécie, Média, fill = Variável)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(x = "", y = "", fill = "Variável") + 
+  theme_bw()
+
+
+```
+
+## 
+
+Por fim, espero que tenham gostado do conteúdo. A apresentação completa estará disponivel no Grupo do Whatsapp e no meu Github: `https://github.com/NielsonAJR/Clube-do-R` 
+
