@@ -2,6 +2,7 @@
 .Rhistory
 .Rapp.history
 
+
 # Session Data files
 .RData
 .RDataTmp
@@ -20,6 +21,9 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj
+*_files
+*_cache
 
 # produced vignettes
 vignettes/*.html
